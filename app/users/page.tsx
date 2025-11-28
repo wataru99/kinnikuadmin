@@ -297,32 +297,6 @@ export default function UsersPage() {
       <Header title="ユーザー管理" />
 
       <main className="p-8">
-        {/* 統計カード */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <div className="bg-white shadow rounded-lg p-6">
-            <div className="text-sm font-medium text-gray-500 mb-1">総ユーザー数</div>
-            <div className="text-2xl font-bold text-gray-900">{users.length}</div>
-          </div>
-          <div className="bg-white shadow rounded-lg p-6">
-            <div className="text-sm font-medium text-gray-500 mb-1">認証済み</div>
-            <div className="text-2xl font-bold text-green-600">
-              {users.filter(u => u.verificationStatus === "verified").length}
-            </div>
-          </div>
-          <div className="bg-white shadow rounded-lg p-6">
-            <div className="text-sm font-medium text-gray-500 mb-1">トレーナー</div>
-            <div className="text-2xl font-bold text-purple-600">
-              {users.filter(u => u.role === "trainer").length}
-            </div>
-          </div>
-          <div className="bg-white shadow rounded-lg p-6">
-            <div className="text-sm font-medium text-gray-500 mb-1">認証待ち</div>
-            <div className="text-2xl font-bold text-yellow-600">
-              {users.filter(u => u.verificationStatus === "pending").length}
-            </div>
-          </div>
-        </div>
-
         {/* 検索・フィルタ */}
         <div className="bg-white shadow rounded-lg p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

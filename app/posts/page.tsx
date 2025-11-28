@@ -118,28 +118,6 @@ export default function PostsPage() {
       <Header title="コミュニティ投稿管理" />
 
       <main className="p-8">
-        {/* 統計カード */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="text-sm text-gray-600 mb-2">総投稿数</div>
-            <div className="text-3xl font-bold text-gray-900">{posts.length}</div>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="text-sm text-gray-600 mb-2">今日の投稿</div>
-            <div className="text-3xl font-bold text-blue-600">{todayPosts.length}</div>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="text-sm text-gray-600 mb-2">通報済み</div>
-            <div className="text-3xl font-bold text-red-600">{reportedPosts.length}</div>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="text-sm text-gray-600 mb-2">総いいね数</div>
-            <div className="text-3xl font-bold text-pink-600">
-              {posts.reduce((sum, post) => sum + post.likes.length, 0)}
-            </div>
-          </div>
-        </div>
-
         {/* フィルタ */}
         <div className="bg-white shadow rounded-lg p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -181,61 +159,43 @@ export default function PostsPage() {
             <div className="mb-4 text-sm text-gray-600">
               表示中: {filteredPosts.length}件 / 全{posts.length}件
             </div>
-            <div className="space-y-4">
+            <div className="bg-white shadow rounded-lg divide-y divide-gray-200">
               {filteredPosts.map((post) => (
                 <div
                   key={post.id}
-                  className={`bg-white shadow rounded-lg p-6 ${
-                    (post.reportCount || 0) > 0 ? "border-2 border-red-500" : ""
+                  className={`px-4 py-3 hover:bg-gray-50 ${
+                    (post.reportCount || 0) > 0 ? "bg-red-50" : ""
                   }`}
                 >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full mr-4 flex items-center justify-center text-white font-bold">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center flex-1 min-w-0">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full mr-3 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
                         {post.userName.charAt(0)}
                       </div>
-                      <div>
-                        <div className="font-semibold text-gray-900">{post.userName}</div>
-                        <div className="text-sm text-gray-500">{formatDate(post.createdAt)}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-900 text-sm">{post.userName}</span>
+                          <span className={`px-2 py-0.5 text-xs font-medium rounded ${getGenreColor(post.genre)}`}>
+                            {getGenreLabel(post.genre)}
+                          </span>
+                          {(post.reportCount || 0) > 0 && (
+                            <span className="px-2 py-0.5 text-xs font-medium rounded bg-red-100 text-red-800">
+                              通報{post.reportCount}
+                            </span>
+                          )}
+                          {post.imageURL && (
+                            <span className="text-xs text-gray-400">📷</span>
+                          )}
+                        </div>
+                        <p className="text-gray-600 text-sm truncate">{post.content}</p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getGenreColor(post.genre)}`}>
-                        {getGenreLabel(post.genre)}
-                      </span>
-                      {(post.reportCount || 0) > 0 && (
-                        <span className="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-                          通報 {post.reportCount}件
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <p className="text-gray-700 mb-4 whitespace-pre-wrap">{post.content}</p>
-
-                  {post.imageURL && (
-                    <div className="mb-4">
-                      <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <span className="text-gray-400 text-sm">画像あり</span>
+                    <div className="flex items-center gap-4 ml-4 flex-shrink-0">
+                      <span className="text-xs text-gray-500">{formatDate(post.createdAt)}</span>
+                      <span className="text-xs text-gray-500">❤️{post.likes.length}</span>
+                      <div className="flex gap-2">
+                        <button className="text-red-600 hover:text-red-800 text-xs">削除</button>
                       </div>
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4 text-sm text-gray-600">
-                      <span>いいね: {post.likes.length}</span>
-                      <span>返信: {post.replyCount || 0}</span>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                        詳細を見る
-                      </button>
-                      <button className="text-yellow-600 hover:text-yellow-800 text-sm font-medium">
-                        非表示
-                      </button>
-                      <button className="text-red-600 hover:text-red-800 text-sm font-medium">
-                        削除
-                      </button>
                     </div>
                   </div>
                 </div>
