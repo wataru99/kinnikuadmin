@@ -2,7 +2,7 @@
 
 import Header from "@/components/Header";
 import { useState, useEffect } from "react";
-import { collection, getDocs, addDoc, deleteDoc, doc, query, orderBy, Timestamp, updateDoc } from "firebase/firestore";
+import { collection, getDocs, addDoc, deleteDoc, doc, query, orderBy, Timestamp, updateDoc, limit } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
 
@@ -138,7 +138,7 @@ function TopicsSection() {
 
   const fetchTopics = async () => {
     try {
-      const q = query(collection(db, "topics"), orderBy("publishedAt", "desc"));
+      const q = query(collection(db, "topics"), orderBy("publishedAt", "desc"), limit(50));
       const snapshot = await getDocs(q);
       const topicsData = snapshot.docs.map((doc) => {
         const data = doc.data();
@@ -540,7 +540,7 @@ function AnnouncementsSection() {
     try {
       setLoading(true);
       const announcementsRef = collection(db, "announcements");
-      const q = query(announcementsRef, orderBy("createdAt", "desc"));
+      const q = query(announcementsRef, orderBy("createdAt", "desc"), limit(50));
       const querySnapshot = await getDocs(q);
 
       const fetchedAnnouncements: Announcement[] = [];

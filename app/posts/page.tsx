@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, getDocs, query, orderBy, Timestamp } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, Timestamp, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Header from "@/components/Header";
 
@@ -35,7 +35,7 @@ export default function PostsPage() {
     try {
       setLoading(true);
       const postsRef = collection(db, "community_posts");
-      const q = query(postsRef, orderBy("createdAt", "desc"));
+      const q = query(postsRef, orderBy("createdAt", "desc"), limit(100));
       const querySnapshot = await getDocs(q);
 
       const fetchedPosts: CommunityPost[] = [];

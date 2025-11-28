@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, getDocs, query, orderBy, where, Timestamp, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, where, Timestamp, deleteDoc, doc, updateDoc, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Header from "@/components/Header";
 
@@ -120,7 +120,7 @@ export default function UsersPage() {
     try {
       setLoading(true);
       const usersRef = collection(db, "users");
-      const q = query(usersRef, orderBy("createdAt", "desc"));
+      const q = query(usersRef, orderBy("createdAt", "desc"), limit(100));
       const querySnapshot = await getDocs(q);
 
       const fetchedUsers: User[] = [];

@@ -37,6 +37,7 @@ export default function Sidebar() {
               <li key={item.href}>
                 <Link
                   href={item.href}
+                  prefetch={true}
                   className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
                     isActive
                       ? "bg-blue-600 text-white"

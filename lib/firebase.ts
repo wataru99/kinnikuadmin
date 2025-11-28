@@ -1,5 +1,5 @@
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
-import { getFirestore, Firestore } from "firebase/firestore";
+import { getFirestore, Firestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
 import { getStorage, FirebaseStorage } from "firebase/storage";
 import { getAuth, Auth } from "firebase/auth";
 
@@ -18,11 +18,52 @@ let db: Firestore;
 let storage: FirebaseStorage;
 let auth: Auth;
 
+// Firebaseの初期化（シングルトンパターン）
+function getFirebaseApp() {
+  if (!app) {
+    app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
+  }
+  return app;
+}
+
+function getFirestoreDb() {
+  if (!db) {
+    const firebaseApp = getFirebaseApp();
+    try {
+      // キャッシュを有効化してオフライン対応・高速化
+      db = initializeFirestore(firebaseApp, {
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager()
+        })
+      });
+    } catch {
+      // すでに初期化済みの場合
+      db = getFirestore(firebaseApp);
+    }
+  }
+  return db;
+}
+
+function getFirebaseStorage() {
+  if (!storage) {
+    storage = getStorage(getFirebaseApp());
+  }
+  return storage;
+}
+
+function getFirebaseAuth() {
+  if (!auth) {
+    auth = getAuth(getFirebaseApp());
+  }
+  return auth;
+}
+
+// クライアントサイドでのみ初期化
 if (typeof window !== "undefined") {
-  app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
-  db = getFirestore(app);
-  storage = getStorage(app);
-  auth = getAuth(app);
+  app = getFirebaseApp();
+  db = getFirestoreDb();
+  storage = getFirebaseStorage();
+  auth = getFirebaseAuth();
 }
 
 export { app, db, storage, auth };
