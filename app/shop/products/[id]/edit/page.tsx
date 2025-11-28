@@ -1,6 +1,7 @@
 "use client";
 
 import Header from "@/components/Header";
+import ProtectedLayout from "@/components/ProtectedLayout";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
@@ -143,6 +144,7 @@ export default function ProductEditPage() {
 
   if (isLoading) {
     return (
+      <ProtectedLayout>
       <div className="min-h-screen bg-gray-50">
         <Header title="商品編集" />
         <main className="p-8">
@@ -151,11 +153,13 @@ export default function ProductEditPage() {
           </div>
         </main>
       </div>
+      </ProtectedLayout>
     );
   }
 
   if (notFound) {
     return (
+      <ProtectedLayout>
       <div className="min-h-screen bg-gray-50">
         <Header title="商品編集" />
         <main className="p-8">
@@ -173,10 +177,12 @@ export default function ProductEditPage() {
           </div>
         </main>
       </div>
+      </ProtectedLayout>
     );
   }
 
   return (
+    <ProtectedLayout>
     <div className="min-h-screen bg-gray-50">
       <Header title="商品編集" />
 
@@ -470,5 +476,6 @@ export default function ProductEditPage() {
         </div>
       </main>
     </div>
+    </ProtectedLayout>
   );
 }

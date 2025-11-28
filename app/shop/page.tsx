@@ -1,6 +1,7 @@
 "use client";
 
 import Header from "@/components/Header";
+import ProtectedLayout from "@/components/ProtectedLayout";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
@@ -273,6 +274,7 @@ ${order.shippingAddress.prefecture}${order.shippingAddress.city}${order.shipping
 
   if (isLoading) {
     return (
+      <ProtectedLayout>
       <div className="min-h-screen bg-gray-50">
         <Header title="オンラインショップ管理" />
         <main className="p-8">
@@ -281,11 +283,13 @@ ${order.shippingAddress.prefecture}${order.shippingAddress.city}${order.shipping
           </div>
         </main>
       </div>
+      </ProtectedLayout>
     );
   }
 
   if (error) {
     return (
+      <ProtectedLayout>
       <div className="min-h-screen bg-gray-50">
         <Header title="オンラインショップ管理" />
         <main className="p-8">
@@ -303,10 +307,12 @@ ${order.shippingAddress.prefecture}${order.shippingAddress.city}${order.shipping
           </div>
         </main>
       </div>
+      </ProtectedLayout>
     );
   }
 
   return (
+    <ProtectedLayout>
     <div className="min-h-screen bg-gray-50 relative">
       {/* 処理中オーバーレイ */}
       {isProcessing && (
@@ -794,6 +800,7 @@ ${order.shippingAddress.prefecture}${order.shippingAddress.city}${order.shipping
         />
       )}
     </div>
+    </ProtectedLayout>
   );
 }
 

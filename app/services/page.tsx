@@ -1,6 +1,7 @@
 "use client";
 
 import Header from "@/components/Header";
+import ProtectedLayout from "@/components/ProtectedLayout";
 import { useState, useEffect } from "react";
 import { collection, getDocs, addDoc, deleteDoc, doc, query, orderBy, Timestamp, updateDoc, limit } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -25,6 +26,7 @@ export default function ServicesPage() {
   const [activeTab, setActiveTab] = useState("topics");
 
   return (
+    <ProtectedLayout>
     <div className="min-h-screen bg-gray-50">
       <Header title="サービス管理" />
 
@@ -76,6 +78,7 @@ export default function ServicesPage() {
         </div>
       </main>
     </div>
+    </ProtectedLayout>
   );
 }
 

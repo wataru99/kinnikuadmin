@@ -4,6 +4,7 @@ import { useState } from "react";
 import { collection, addDoc, getDocs, deleteDoc, doc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Header from "@/components/Header";
+import ProtectedLayout from "@/components/ProtectedLayout";
 import Link from "next/link";
 
 type Product = {
@@ -209,6 +210,7 @@ export default function SeedPage() {
   };
 
   return (
+    <ProtectedLayout>
     <div className="min-h-screen bg-gray-50">
       <Header title="データ投入" />
 
@@ -275,5 +277,6 @@ export default function SeedPage() {
         </div>
       </main>
     </div>
+    </ProtectedLayout>
   );
 }

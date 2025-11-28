@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { collection, getDocs, query, orderBy, where, Timestamp, deleteDoc, doc, updateDoc, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Header from "@/components/Header";
+import ProtectedLayout from "@/components/ProtectedLayout";
 
 type UserRole = "viewer" | "trainer" | "admin";
 type VerificationStatus = "unverified" | "pending" | "verified" | "rejected";
@@ -293,6 +294,7 @@ export default function UsersPage() {
   };
 
   return (
+    <ProtectedLayout>
     <div className="min-h-screen bg-gray-50">
       <Header title="ユーザー管理" />
 
@@ -782,5 +784,6 @@ export default function UsersPage() {
         )}
       </main>
     </div>
+    </ProtectedLayout>
   );
 }

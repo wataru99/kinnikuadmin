@@ -1,6 +1,7 @@
 "use client";
 
 import Header from "@/components/Header";
+import ProtectedLayout from "@/components/ProtectedLayout";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -84,6 +85,7 @@ export default function ProductNewPage() {
   };
 
   return (
+    <ProtectedLayout>
     <div className="min-h-screen bg-gray-50">
       <Header title="商品登録" />
 
@@ -340,5 +342,6 @@ export default function ProductNewPage() {
         </div>
       </main>
     </div>
+    </ProtectedLayout>
   );
 }

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { collection, getDocs, query, orderBy, Timestamp, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Header from "@/components/Header";
+import ProtectedLayout from "@/components/ProtectedLayout";
 
 type PostGenre = "すべて" | "悩み相談" | "独り言" | "アドバイス" | "進捗報告" | "その他";
 
@@ -114,6 +115,7 @@ export default function PostsPage() {
   };
 
   return (
+    <ProtectedLayout>
     <div className="min-h-screen bg-gray-50">
       <Header title="コミュニティ投稿管理" />
 
@@ -211,5 +213,6 @@ export default function PostsPage() {
         )}
       </main>
     </div>
+    </ProtectedLayout>
   );
 }

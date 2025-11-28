@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { collection, getDocs, query, orderBy, limit, startAfter, Timestamp, Query, DocumentData, QueryDocumentSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Header from "@/components/Header";
+import ProtectedLayout from "@/components/ProtectedLayout";
 
 interface MusclePhoto {
   id: string;
@@ -163,6 +164,7 @@ export default function PhotosPage() {
   };
 
   return (
+    <ProtectedLayout>
     <div className="min-h-screen bg-gray-50">
       <Header title="筋肉写真管理" />
 
@@ -344,5 +346,6 @@ export default function PhotosPage() {
         )}
       </main>
     </div>
+    </ProtectedLayout>
   );
 }
