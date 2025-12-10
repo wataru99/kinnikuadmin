@@ -144,10 +144,14 @@ export default function UsersPage() {
           trainer: data.trainer,
           createdAt: data.createdAt instanceof Timestamp
             ? data.createdAt.toDate()
-            : new Date(),
+            : typeof data.createdAt === "number"
+              ? new Date(data.createdAt * 1000)
+              : new Date(),
           updatedAt: data.updatedAt instanceof Timestamp
             ? data.updatedAt.toDate()
-            : undefined,
+            : typeof data.updatedAt === "number"
+              ? new Date(data.updatedAt * 1000)
+              : undefined,
           favoriteTrainerIds: data.favoriteTrainerIds || [],
           followingIds: data.followingIds || [],
           participatedCompetitionIds: data.participatedCompetitionIds || [],
