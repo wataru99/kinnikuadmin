@@ -165,6 +165,8 @@ export default function UsersPage() {
         });
       });
 
+      // createdAtで新しい順にソート（Timestamp型と数値型が混在するため）
+      fetchedUsers.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       setUsers(fetchedUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
