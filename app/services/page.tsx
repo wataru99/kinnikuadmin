@@ -112,12 +112,42 @@ interface Topic {
   title: string;
   content: string;
   imageURL?: string;
+  url?: string;
   category: TopicCategory;
   author: string;
   publishedAt?: Date;
   likes?: number;
   comments?: number;
   isNew?: boolean;
+  isFullImage?: boolean;
+  isDirectLink?: boolean;
+}
+
+// テキスト内のURLをリンクに変換
+function Linkify({ text }: { text: string }) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+
+  return (
+    <>
+      {parts.map((part, i) =>
+        urlRegex.test(part) ? (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="text-blue-600 hover:text-blue-800 underline break-all"
+          >
+            {part}
+          </a>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
 }
 
 function TopicsSection() {
@@ -129,9 +159,12 @@ function TopicsSection() {
   const [formData, setFormData] = useState({
     title: "",
     content: "",
+    url: "",
     category: "training" as TopicCategory,
     author: "管理者",
     isNew: false,
+    isFullImage: false,
+    isDirectLink: false,
   });
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
@@ -149,6 +182,8 @@ function TopicsSection() {
           id: doc.id,
           ...data,
           publishedAt: data.publishedAt?.toDate(),
+          isFullImage: data.isFullImage ?? false,
+          isDirectLink: data.isDirectLink ?? false,
         } as Topic;
       });
       setTopics(topicsData);
@@ -196,9 +231,12 @@ function TopicsSection() {
         await updateDoc(doc(db, "topics", editingTopic.id), {
           title: formData.title,
           content: formData.content,
+          url: formData.url || "",
           category: formData.category,
           author: formData.author,
           isNew: formData.isNew,
+          isFullImage: formData.isFullImage,
+          isDirectLink: formData.isFullImage ? formData.isDirectLink : false,
           ...(imageURL && { imageURL }),
         });
       } else {
@@ -206,6 +244,7 @@ function TopicsSection() {
         await addDoc(collection(db, "topics"), {
           title: formData.title,
           content: formData.content,
+          url: formData.url || "",
           category: formData.category,
           author: formData.author,
           imageURL: imageURL || "",
@@ -213,6 +252,8 @@ function TopicsSection() {
           likes: 0,
           comments: 0,
           isNew: formData.isNew,
+          isFullImage: formData.isFullImage,
+          isDirectLink: formData.isFullImage ? formData.isDirectLink : false,
         });
       }
 
@@ -221,9 +262,12 @@ function TopicsSection() {
       setFormData({
         title: "",
         content: "",
+        url: "",
         category: "training",
         author: "管理者",
         isNew: false,
+        isFullImage: false,
+        isDirectLink: false,
       });
       setSelectedImage(null);
       fetchTopics();
@@ -240,9 +284,12 @@ function TopicsSection() {
     setFormData({
       title: topic.title,
       content: topic.content,
+      url: topic.url || "",
       category: topic.category,
       author: topic.author,
       isNew: topic.isNew || false,
+      isFullImage: topic.isFullImage || false,
+      isDirectLink: topic.isDirectLink || false,
     });
     setShowModal(true);
   };
@@ -253,9 +300,12 @@ function TopicsSection() {
     setFormData({
       title: "",
       content: "",
+      url: "",
       category: "training",
       author: "管理者",
       isNew: false,
+      isFullImage: false,
+      isDirectLink: false,
     });
     setSelectedImage(null);
   };
@@ -361,6 +411,17 @@ function TopicsSection() {
                         </span>
                       )}
                     </div>
+                    {topic.url && (
+                      <a
+                        href={topic.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-xs text-blue-600 hover:text-blue-800 underline truncate block max-w-xs mt-0.5"
+                      >
+                        {topic.url}
+                      </a>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
@@ -415,6 +476,18 @@ function TopicsSection() {
               </div>
 
               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">URL（任意）</label>
+                <input
+                  type="url"
+                  value={formData.url}
+                  onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900"
+                  placeholder="https://example.com/article"
+                />
+                <p className="text-xs text-gray-500 mt-0.5">記事名の下にリンクとして表示されます</p>
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">内容 *</label>
                 <textarea
                   required
@@ -423,6 +496,7 @@ function TopicsSection() {
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900"
                 />
+                <p className="text-xs text-gray-500 mt-0.5">内容中のURLは自動でハイパーリンクになります</p>
               </div>
 
               <div>
@@ -493,6 +567,34 @@ function TopicsSection() {
                   NEWバッジを表示
                 </label>
               </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="isFullImage"
+                  checked={formData.isFullImage}
+                  onChange={(e) => setFormData({ ...formData, isFullImage: e.target.checked, isDirectLink: e.target.checked ? formData.isDirectLink : false })}
+                  className="mr-2"
+                />
+                <label htmlFor="isFullImage" className="text-sm text-gray-700">
+                  全画面画像（カードを画像のみで表示）
+                </label>
+              </div>
+
+              {formData.isFullImage && formData.url && (
+                <div className="flex items-center ml-6">
+                  <input
+                    type="checkbox"
+                    id="isDirectLink"
+                    checked={formData.isDirectLink}
+                    onChange={(e) => setFormData({ ...formData, isDirectLink: e.target.checked })}
+                    className="mr-2"
+                  />
+                  <label htmlFor="isDirectLink" className="text-sm text-gray-700">
+                    直接リンク（タップでURLに直接遷移）
+                  </label>
+                </div>
+              )}
 
               <div className="flex justify-end gap-3 pt-4">
                 <button
