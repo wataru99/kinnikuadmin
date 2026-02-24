@@ -647,7 +647,7 @@ export default function UsersPage() {
                           </div>
                           <div className="bg-yellow-50 p-3 rounded-lg text-center">
                             <div className="text-xs text-gray-500">ランキングスコア</div>
-                            <div className="font-bold text-yellow-600">{selectedUser.stats.rankingScore.toFixed(1)}</div>
+                            <div className="font-bold text-yellow-600">{(selectedUser.stats.rankingScore ?? 0).toFixed(1)}</div>
                           </div>
                           <div className="bg-yellow-50 p-3 rounded-lg text-center">
                             <div className="text-xs text-gray-500">現在ランク</div>
@@ -668,15 +668,15 @@ export default function UsersPage() {
                         <div className="grid grid-cols-3 gap-3">
                           <div className="bg-orange-50 p-3 rounded-lg text-center">
                             <div className="text-xs text-gray-500">残高</div>
-                            <div className="font-bold text-orange-600">{selectedUser.points.balance.toLocaleString()}</div>
+                            <div className="font-bold text-orange-600">{(selectedUser.points.balance ?? 0).toLocaleString()}</div>
                           </div>
                           <div className="bg-orange-50 p-3 rounded-lg text-center">
                             <div className="text-xs text-gray-500">総獲得</div>
-                            <div className="font-bold text-orange-600">{selectedUser.points.earnedTotal.toLocaleString()}</div>
+                            <div className="font-bold text-orange-600">{(selectedUser.points.earnedTotal ?? 0).toLocaleString()}</div>
                           </div>
                           <div className="bg-orange-50 p-3 rounded-lg text-center">
                             <div className="text-xs text-gray-500">総使用</div>
-                            <div className="font-bold text-orange-600">{selectedUser.points.spentTotal.toLocaleString()}</div>
+                            <div className="font-bold text-orange-600">{(selectedUser.points.spentTotal ?? 0).toLocaleString()}</div>
                           </div>
                         </div>
                       </div>
@@ -697,7 +697,7 @@ export default function UsersPage() {
                           </div>
                           <div className="bg-gray-50 p-3 rounded-lg">
                             <div className="text-xs text-gray-500">評価</div>
-                            <div className="font-semibold text-gray-900">⭐ {selectedUser.trainer.rating.toFixed(1)} ({selectedUser.trainer.reviewCount}件)</div>
+                            <div className="font-semibold text-gray-900">⭐ {(selectedUser.trainer.rating ?? 0).toFixed(1)} ({selectedUser.trainer.reviewCount ?? 0}件)</div>
                           </div>
                           <div className="bg-gray-50 p-3 rounded-lg">
                             <div className="text-xs text-gray-500">完了注文数</div>
