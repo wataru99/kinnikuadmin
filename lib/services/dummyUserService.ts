@@ -95,7 +95,7 @@ export async function createDummyUser(data: CreateDummyUserData): Promise<string
   if (!db) throw new Error("Firestore is not initialized");
 
   const sakuraId = generateSakuraId();
-  const now = Date.now() / 1000; // epoch秒
+  const now = Timestamp.now();
 
   const userData: Record<string, unknown> = {
     id: sakuraId,
@@ -125,7 +125,7 @@ export async function toggleDummyUserVisibility(id: string, isHidden: boolean): 
   if (!db) throw new Error("Firestore is not initialized");
   await updateDoc(doc(db, "users", id), {
     isHidden: !isHidden,
-    updatedAt: Date.now() / 1000,
+    updatedAt: Timestamp.now(),
   });
 }
 
@@ -133,7 +133,7 @@ export async function updateDummyUser(id: string, data: UpdateDummyUserData): Pr
   if (!db) throw new Error("Firestore is not initialized");
 
   const updateData: Record<string, unknown> = {
-    updatedAt: Date.now() / 1000,
+    updatedAt: Timestamp.now(),
   };
 
   if (data.displayName !== undefined) updateData.displayName = data.displayName;
