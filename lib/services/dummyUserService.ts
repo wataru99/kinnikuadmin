@@ -302,6 +302,202 @@ export async function createDummyMuscle(data: CreateDummyMuscleData): Promise<st
   return muscleId;
 }
 
+// ========== 自動運用（最新の筋肉 一括処理） ==========
+
+// 週開始日を取得（火曜日起算、Asia/Tokyo） iOS MuscleRankingService と同じロジック
+function getWeekStartDateString(): string {
+  const now = new Date();
+  const tokyoDateStr = now.toLocaleDateString("en-CA", { timeZone: "Asia/Tokyo" });
+  const [year, month, day] = tokyoDateStr.split("-").map(Number);
+
+  const tokyoDate = new Date(Date.UTC(year, month - 1, day));
+  const dayOfWeek = tokyoDate.getUTCDay(); // 0=Sun, 1=Mon, 2=Tue, ...
+
+  // 直近の火曜日を計算
+  const daysSinceTuesday = (dayOfWeek - 2 + 7) % 7;
+  const tuesday = new Date(tokyoDate);
+  tuesday.setUTCDate(tuesday.getUTCDate() - daysSinceTuesday);
+
+  const y = tuesday.getUTCFullYear();
+  const m = String(tuesday.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(tuesday.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+// Firestoreレート制限回避用の待機
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// 最新の筋肉の全投稿を取得
+export async function getAllLatestMuscles(): Promise<
+  { id: string; userId: string; likes: number; likedByUsers: string[]; viewCount: number }[]
+> {
+  if (!db) throw new Error("Firestore is not initialized");
+
+  const snapshot = await getDocs(collection(db, "latest_muscles"));
+  return snapshot.docs.map((d) => {
+    const data = d.data();
+    return {
+      id: d.id,
+      userId: data.userId || "",
+      likes: data.likes || 0,
+      likedByUsers: data.likedByUsers || [],
+      viewCount: data.viewCount || 0,
+    };
+  });
+}
+
+// 自動いいね一括付与
+export async function autoLikeAllMuscles(config: {
+  sakuraUserIds: string[];
+  minLikes: number;
+  maxLikes: number;
+}): Promise<{ totalProcessed: number; totalLikesAdded: number; errors: string[] }> {
+  if (!db) throw new Error("Firestore is not initialized");
+
+  const muscles = await getAllLatestMuscles();
+  let totalLikesAdded = 0;
+  const errors: string[] = [];
+
+  // 投稿オーナーごとの追加いいね数を集計
+  const likesPerUser: Record<string, number> = {};
+
+  for (const muscle of muscles) {
+    try {
+      // ランダム数のいいねを付与
+      const likeCount =
+        Math.floor(Math.random() * (config.maxLikes - config.minLikes + 1)) + config.minLikes;
+
+      // 既にいいね済みのユーザーを除外
+      const existingLikers = new Set(muscle.likedByUsers);
+      const availableUsers = config.sakuraUserIds.filter((id) => !existingLikers.has(id));
+
+      if (availableUsers.length === 0) continue;
+
+      // シャッフルして必要数を取得
+      const shuffled = [...availableUsers];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      const usersToLike = shuffled.slice(0, Math.min(likeCount, shuffled.length));
+
+      if (usersToLike.length === 0) continue;
+
+      // 1回のupdateDocでまとめて更新
+      await Promise.all([
+        updateDoc(doc(db, "latest_muscles", muscle.id), {
+          likes: increment(usersToLike.length),
+          likedByUsers: arrayUnion(...usersToLike),
+        }),
+        updateDoc(doc(db, "latest_muscle_posts", muscle.id), {
+          likes: increment(usersToLike.length),
+          likedByUsers: arrayUnion(...usersToLike),
+        }),
+      ]);
+
+      totalLikesAdded += usersToLike.length;
+
+      // オーナーごとに集計
+      likesPerUser[muscle.userId] = (likesPerUser[muscle.userId] || 0) + usersToLike.length;
+
+      // Firestoreレート制限回避
+      await sleep(500);
+    } catch (e) {
+      errors.push(`${muscle.id}: ${e instanceof Error ? e.message : "不明なエラー"}`);
+    }
+  }
+
+  // ランキング用: 各投稿オーナーの stats.weeklyLikes を更新
+  const currentWeekStart = getWeekStartDateString();
+
+  for (const [userId, addedLikes] of Object.entries(likesPerUser)) {
+    try {
+      const userDocSnap = await getDoc(doc(db, "users", userId));
+      const userData = userDocSnap.exists() ? userDocSnap.data() : {} as Record<string, unknown>;
+
+      const stats = (userData.stats as Record<string, unknown>) || {};
+      let weeklyData = (stats.weeklyLikes as Record<string, unknown>) || {};
+
+      // 週が変わっていたらリセット
+      const storedWeekStart = typeof weeklyData.weekStartDate === "string"
+        ? weeklyData.weekStartDate.substring(0, 10)
+        : "";
+      if (storedWeekStart !== currentWeekStart) {
+        weeklyData = {};
+      }
+
+      const currentCount = (weeklyData.weeklyLikeCount as number) || 0;
+      const currentTotal = (weeklyData.totalLikes as number) || 0;
+      const likeSources = (weeklyData.likeSources as Record<string, number>) || {};
+
+      const newWeeklyData = {
+        userId,
+        userName: userData.displayName || "",
+        userProfileImageUrl: userData.profileImageURL || "",
+        weeklyLikeCount: currentCount + addedLikes,
+        totalLikes: currentTotal + addedLikes,
+        weekStartDate: currentWeekStart,
+        lastUpdatedAt: new Date().toISOString(),
+        likeSources: {
+          latestMuscles: (likeSources.latestMuscles || 0) + addedLikes,
+          profile: likeSources.profile || 0,
+          hotspots: likeSources.hotspots || 0,
+        },
+      };
+
+      await setDoc(doc(db, "users", userId), {
+        stats: { weeklyLikes: newWeeklyData },
+      }, { merge: true });
+
+      // Firestoreレート制限回避
+      await sleep(300);
+    } catch (e) {
+      errors.push(`stats更新 ${userId}: ${e instanceof Error ? e.message : "不明なエラー"}`);
+    }
+  }
+
+  return { totalProcessed: muscles.length, totalLikesAdded, errors };
+}
+
+// 自動閲覧数一括付与
+export async function autoAddViewsAllMuscles(config: {
+  minViews: number;
+  maxViews: number;
+}): Promise<{ totalProcessed: number; totalViewsAdded: number; errors: string[] }> {
+  if (!db) throw new Error("Firestore is not initialized");
+
+  const muscles = await getAllLatestMuscles();
+  let totalViewsAdded = 0;
+  const errors: string[] = [];
+
+  for (const muscle of muscles) {
+    try {
+      const viewsToAdd =
+        Math.floor(Math.random() * (config.maxViews - config.minViews + 1)) + config.minViews;
+
+      await Promise.all([
+        updateDoc(doc(db, "latest_muscles", muscle.id), {
+          viewCount: increment(viewsToAdd),
+        }),
+        updateDoc(doc(db, "latest_muscle_posts", muscle.id), {
+          viewCount: increment(viewsToAdd),
+        }),
+      ]);
+
+      totalViewsAdded += viewsToAdd;
+
+      // Firestoreレート制限回避
+      await sleep(500);
+    } catch (e) {
+      errors.push(`${muscle.id}: ${e instanceof Error ? e.message : "不明なエラー"}`);
+    }
+  }
+
+  return { totalProcessed: muscles.length, totalViewsAdded, errors };
+}
+
 // ========== バルクアクション ==========
 
 // コミュニティ投稿にいいね

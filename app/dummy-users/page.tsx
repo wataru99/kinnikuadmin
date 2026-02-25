@@ -83,7 +83,7 @@ export default function DummyUsersPage() {
             <ActionsTab users={users} />
           )}
           {activeTab === "auto" && (
-            <AutoOperationTab />
+            <AutoOperationTab users={users} />
           )}
         </main>
       </div>
