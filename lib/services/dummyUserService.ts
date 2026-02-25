@@ -70,6 +70,7 @@ export async function getDummyUsers(): Promise<DummyUser[]> {
       currentWeight: data.currentWeight,
       currentBodyFat: data.currentBodyFat,
       height: data.height,
+      isHidden: data.isHidden === true,
       profileImageURL: data.profileImageURL,
       myTrainingIconURL: data.myTrainingIconURL,
       createdAt: typeof data.createdAt === "number"
@@ -118,6 +119,14 @@ export async function createDummyUser(data: CreateDummyUserData): Promise<string
 
   await setDoc(doc(db, "users", sakuraId), userData);
   return sakuraId;
+}
+
+export async function toggleDummyUserVisibility(id: string, isHidden: boolean): Promise<void> {
+  if (!db) throw new Error("Firestore is not initialized");
+  await updateDoc(doc(db, "users", id), {
+    isHidden: !isHidden,
+    updatedAt: Date.now() / 1000,
+  });
 }
 
 export async function updateDummyUser(id: string, data: UpdateDummyUserData): Promise<void> {

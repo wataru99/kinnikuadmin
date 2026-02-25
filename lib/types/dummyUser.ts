@@ -12,6 +12,7 @@ export interface DummyUser {
   isSubscribed: false;
   hasFemaleTrainerAccess: false;
   isSakura: true;
+  isHidden?: boolean; // アプリ上で非表示にするフラグ
   bio?: string;
   trainingExperience?: number;
   currentWeight?: number;
