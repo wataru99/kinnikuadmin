@@ -14,6 +14,7 @@ const menuItems = [
   { label: "広告管理", href: "/ads" },
   { label: "ショップ管理", href: "/shop" },
   { label: "ダミーユーザー管理", href: "/dummy-users" },
+  { label: "通知設定", href: "/notifications" },
 ];
 
 interface SidebarProps {
