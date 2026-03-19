@@ -5,6 +5,7 @@ import { collection, getDocs, query, orderBy, Timestamp, limit } from "firebase/
 import { db } from "@/lib/firebase";
 import Header from "@/components/Header";
 import ProtectedLayout from "@/components/ProtectedLayout";
+import { adminDeleteCommunityPost } from "@/lib/services/adminDeleteService";
 
 type PostGenre = "すべて" | "悩み相談" | "独り言" | "アドバイス" | "進捗報告" | "その他";
 
@@ -27,6 +28,7 @@ export default function PostsPage() {
   const [loading, setLoading] = useState(true);
   const [genreFilter, setGenreFilter] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPosts();
@@ -64,6 +66,20 @@ export default function PostsPage() {
       console.error("Error fetching posts:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    if (!confirm("この投稿を削除しますか？画像・返信も全て削除されます。")) return;
+    setDeletingId(postId);
+    try {
+      await adminDeleteCommunityPost(postId);
+      setPosts(prev => prev.filter(p => p.id !== postId));
+    } catch (error) {
+      console.error("削除エラー:", error);
+      alert("削除に失敗しました");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -196,7 +212,13 @@ export default function PostsPage() {
                       <span className="text-xs text-gray-500">{formatDate(post.createdAt)}</span>
                       <span className="text-xs text-gray-500">❤️{post.likes.length}</span>
                       <div className="flex gap-2">
-                        <button className="text-red-600 hover:text-red-800 text-xs">削除</button>
+                        <button
+                          onClick={() => handleDeletePost(post.id)}
+                          disabled={deletingId === post.id}
+                          className="text-red-600 hover:text-red-800 text-xs disabled:opacity-50"
+                        >
+                          {deletingId === post.id ? "削除中..." : "削除"}
+                        </button>
                       </div>
                     </div>
                   </div>

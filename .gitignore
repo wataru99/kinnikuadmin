@@ -1,5 +1,7 @@
 # dependencies
 /node_modules
+node_modules.nosync/
+node_modules\ 2
 /.pnp
 .pnp.js
 
@@ -8,6 +10,8 @@
 
 # next.js
 /.next/
+.next
+.next.nosync/
 /out/
 
 # production
