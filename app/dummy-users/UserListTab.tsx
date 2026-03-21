@@ -38,6 +38,8 @@ export default function UserListTab({ users, loading, onRefresh }: Props) {
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [genderFilter, setGenderFilter] = useState<string>("");
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
 
   const filteredUsers = users.filter((u) => {
     const matchesSearch = u.displayName.toLowerCase().includes(searchTerm.toLowerCase());
@@ -77,6 +79,8 @@ export default function UserListTab({ users, loading, onRefresh }: Props) {
       currentBodyFat: user.currentBodyFat,
       height: user.height,
     });
+    setProfileImageFile(null);
+    setProfileImagePreview(user.profileImageURL || user.myTrainingIconURL || null);
     setShowEditModal(true);
   };
 
@@ -84,9 +88,14 @@ export default function UserListTab({ users, loading, onRefresh }: Props) {
     if (!selectedUser) return;
     setSaving(true);
     try {
-      await updateDummyUser(selectedUser.id, formData);
+      await updateDummyUser(selectedUser.id, {
+        ...formData,
+        profileImageFile: profileImageFile || undefined,
+      });
       setShowEditModal(false);
       setSelectedUser(null);
+      setProfileImageFile(null);
+      setProfileImagePreview(null);
       onRefresh();
     } catch (e) {
       alert(`更新に失敗しました: ${e instanceof Error ? e.message : "不明なエラー"}`);
@@ -131,8 +140,42 @@ export default function UserListTab({ users, loading, onRefresh }: Props) {
     });
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setProfileImageFile(file);
+      const reader = new FileReader();
+      reader.onload = (ev) => setProfileImagePreview(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
   const renderForm = () => (
     <div className="space-y-4">
+      {/* アイコン画像 */}
+      {showEditModal && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">アイコン画像</label>
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+              {profileImagePreview ? (
+                <img src={profileImagePreview} alt="アイコン" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl">👤</div>
+              )}
+            </div>
+            <div className="flex-1">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="w-full text-sm text-gray-900 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              />
+              <p className="mt-1 text-xs text-gray-400">JPEG, PNG対応</p>
+            </div>
+          </div>
+        </div>
+      )}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">表示名 *</label>
         <input
@@ -325,6 +368,13 @@ export default function UserListTab({ users, loading, onRefresh }: Props) {
             {filteredUsers.map((user) => (
               <div key={user.id} className={`bg-white shadow rounded-lg p-4 ${user.isHidden ? "opacity-50" : ""}`}>
                 <div className="flex items-start justify-between mb-2">
+                  <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 mr-3">
+                    {(user.profileImageURL || user.myTrainingIconURL) ? (
+                      <img src={user.profileImageURL || user.myTrainingIconURL} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-lg">👤</div>
+                    )}
+                  </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-gray-900 text-sm">{user.displayName}</span>
@@ -402,8 +452,19 @@ export default function UserListTab({ users, loading, onRefresh }: Props) {
                 {filteredUsers.map((user) => (
                   <tr key={user.id} className={`hover:bg-gray-50 ${user.isHidden ? "opacity-50" : ""}`}>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{user.displayName}</div>
-                      <div className="text-xs text-gray-500 font-mono">{user.id}</div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+                          {(user.profileImageURL || user.myTrainingIconURL) ? (
+                            <img src={user.profileImageURL || user.myTrainingIconURL} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">👤</div>
+                          )}
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{user.displayName}</div>
+                          <div className="text-xs text-gray-500 font-mono">{user.id}</div>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 text-xs font-semibold rounded-full ${

@@ -129,6 +129,13 @@ export async function toggleDummyUserVisibility(id: string, isHidden: boolean): 
   });
 }
 
+async function uploadProfileImage(userId: string, file: File): Promise<string> {
+  if (!storage) throw new Error("Storage is not initialized");
+  const storageRef = ref(storage, `profile_images/${userId}/profile.jpg`);
+  await uploadBytes(storageRef, file);
+  return getDownloadURL(storageRef);
+}
+
 export async function updateDummyUser(id: string, data: UpdateDummyUserData): Promise<void> {
   if (!db) throw new Error("Firestore is not initialized");
 
@@ -143,6 +150,12 @@ export async function updateDummyUser(id: string, data: UpdateDummyUserData): Pr
   if (data.currentWeight !== undefined) updateData.currentWeight = data.currentWeight;
   if (data.currentBodyFat !== undefined) updateData.currentBodyFat = data.currentBodyFat;
   if (data.height !== undefined) updateData.height = data.height;
+
+  if (data.profileImageFile) {
+    const imageUrl = await uploadProfileImage(id, data.profileImageFile);
+    updateData.profileImageURL = imageUrl;
+    updateData.myTrainingIconURL = imageUrl;
+  }
 
   await updateDoc(doc(db, "users", id), updateData);
 }

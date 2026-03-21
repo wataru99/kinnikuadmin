@@ -42,6 +42,7 @@ export interface UpdateDummyUserData {
   currentWeight?: number;
   currentBodyFat?: number;
   height?: number;
+  profileImageFile?: File;
 }
 
 // コミュニティ投稿（posts コレクション）
