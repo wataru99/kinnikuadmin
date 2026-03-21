@@ -8,7 +8,10 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 
 export default function NotificationsPage() {
   const [roomId, setRoomId] = useState("");
+  const [apiToken, setApiToken] = useState("");
+  const [enabled, setEnabled] = useState(true);
   const [savedRoomId, setSavedRoomId] = useState("");
+  const [savedEnabled, setSavedEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -28,6 +31,9 @@ export default function NotificationsPage() {
         const data = snap.data();
         setRoomId(data.roomId || "");
         setSavedRoomId(data.roomId || "");
+        setApiToken(data.apiToken || "");
+        setEnabled(data.enabled ?? true);
+        setSavedEnabled(data.enabled ?? false);
       }
     } catch (error) {
       console.error("設定の読み込みに失敗:", error);
@@ -48,9 +54,12 @@ export default function NotificationsPage() {
     try {
       await setDoc(doc(db, "settings", "chatwork"), {
         roomId: roomId.trim(),
+        apiToken: apiToken.trim(),
+        enabled,
         updatedAt: new Date().toISOString(),
       });
       setSavedRoomId(roomId.trim());
+      setSavedEnabled(enabled);
       setStatus({ type: "success", message: "保存しました" });
     } catch (error) {
       console.error("保存エラー:", error);
@@ -124,6 +133,54 @@ export default function NotificationsPage() {
                 <div className="text-gray-500 text-sm">読み込み中...</div>
               ) : (
                 <div className="space-y-4">
+                  {/* 通知ON/OFF */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">
+                        通知を有効にする
+                      </span>
+                      <p className="text-xs text-gray-400">
+                        OFFにすると通知が送信されません
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={enabled}
+                      onClick={() => setEnabled(!enabled)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        enabled ? "bg-blue-600" : "bg-gray-300"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          enabled ? "translate-x-6" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* APIトークン入力 */}
+                  <div>
+                    <label
+                      htmlFor="apiToken"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Chatwork APIトークン
+                    </label>
+                    <input
+                      id="apiToken"
+                      type="password"
+                      value={apiToken}
+                      onChange={(e) => setApiToken(e.target.value)}
+                      placeholder="APIトークンを入力"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    />
+                    <p className="mt-1 text-xs text-gray-400">
+                      Chatworkの管理画面から取得したAPIトークンを入力してください
+                    </p>
+                  </div>
+
                   {/* ルームID入力 */}
                   <div>
                     <label
@@ -183,9 +240,15 @@ export default function NotificationsPage() {
                     <p className="text-xs text-gray-400">
                       ステータス:{" "}
                       {savedRoomId ? (
-                        <span className="text-green-600 font-medium">
-                          設定済み（ルームID: {savedRoomId}）
-                        </span>
+                        savedEnabled ? (
+                          <span className="text-green-600 font-medium">
+                            有効（ルームID: {savedRoomId}）
+                          </span>
+                        ) : (
+                          <span className="text-orange-500 font-medium">
+                            無効（ルームID: {savedRoomId}）
+                          </span>
+                        )
                       ) : (
                         <span className="text-orange-500 font-medium">
                           未設定

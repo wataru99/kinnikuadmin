@@ -25,7 +25,8 @@ export async function POST(request: NextRequest) {
 
     // Firestoreから Chatwork設定を取得
     const settingsDoc = await getDoc(doc(serverDb, "settings", "chatwork"));
-    const roomId = settingsDoc.exists() ? settingsDoc.data()?.roomId : null;
+    const settings = settingsDoc.exists() ? settingsDoc.data() : null;
+    const roomId = settings?.roomId || null;
 
     if (!roomId) {
       console.warn("Chatwork roomId が未設定です");
@@ -35,9 +36,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const apiToken = process.env.CHATWORK_API_TOKEN;
+    // enabledフラグチェック（未設定時はfalse扱い）
+    if (settings?.enabled === false) {
+      return NextResponse.json({ success: true, skipped: true });
+    }
+
+    // Firestoreのトークンを優先、なければ環境変数にフォールバック
+    const apiToken = settings?.apiToken || process.env.CHATWORK_API_TOKEN;
     if (!apiToken) {
-      console.error("CHATWORK_API_TOKEN 環境変数が未設定です");
+      console.error("Chatwork APIトークンが未設定です");
       return NextResponse.json(
         { error: "Chatwork API token is not configured" },
         { status: 500 }
