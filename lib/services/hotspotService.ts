@@ -13,12 +13,12 @@ import { db, storage } from "../firebase";
 export interface Hotspot {
   id: string;
   muscleGroup?: string;
-  muscleName?: string;
+  customMuscleNames?: string[];
   customImagePath?: string;
   trainingMediaURLs?: string[];
   imageUrl?: string;
-  updatedAt: Date;
-  createdAt: Date;
+  lastUpdated: Date;
+  hasImage: boolean;
 }
 
 /**
@@ -31,25 +31,34 @@ export async function getUserHotspots(userId: string): Promise<Hotspot[]> {
   const hotspots: Hotspot[] = [];
   snapshot.forEach((docSnap) => {
     const data = docSnap.data();
+    const hasImage = !!(
+      data.customImagePath ||
+      (data.trainingMediaURLs && data.trainingMediaURLs.length > 0)
+    );
+
+    // lastUpdated は epoch秒（number）で保存されている
+    let lastUpdated: Date;
+    if (typeof data.lastUpdated === "number") {
+      lastUpdated = new Date(data.lastUpdated * 1000);
+    } else if (data.lastUpdated instanceof Timestamp) {
+      lastUpdated = data.lastUpdated.toDate();
+    } else {
+      lastUpdated = new Date();
+    }
+
     hotspots.push({
       id: docSnap.id,
       muscleGroup: data.muscleGroup,
-      muscleName: data.muscleName,
+      customMuscleNames: data.customMuscleNames,
       customImagePath: data.customImagePath,
       trainingMediaURLs: data.trainingMediaURLs,
       imageUrl: data.imageUrl,
-      updatedAt:
-        data.updatedAt instanceof Timestamp
-          ? data.updatedAt.toDate()
-          : new Date(),
-      createdAt:
-        data.createdAt instanceof Timestamp
-          ? data.createdAt.toDate()
-          : new Date(),
+      lastUpdated,
+      hasImage,
     });
   });
 
-  hotspots.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  hotspots.sort((a, b) => b.lastUpdated.getTime() - a.lastUpdated.getTime());
   return hotspots;
 }
 

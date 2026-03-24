@@ -27,6 +27,8 @@ const getMuscleGroupLabel = (group?: string) => {
       return "脚";
     case "abs":
       return "腹筋";
+    case "glutes":
+      return "お尻";
     default:
       return "その他";
   }
@@ -65,10 +67,17 @@ export default function UserHotspotsModal({
     }
   };
 
+  const getDisplayName = (hotspot: Hotspot): string => {
+    if (hotspot.customMuscleNames && hotspot.customMuscleNames.length > 0) {
+      return hotspot.customMuscleNames.join(", ");
+    }
+    return getMuscleGroupLabel(hotspot.muscleGroup);
+  };
+
   const handleDelete = async (hotspot: Hotspot) => {
     if (
       !confirm(
-        `このホットスポット（${getMuscleGroupLabel(hotspot.muscleGroup)} - ${hotspot.muscleName || "不明"}）を削除しますか？\n関連するタイムライン投稿・画像も全て削除されます。`
+        `このホットスポット（${getDisplayName(hotspot)}）を削除しますか？\n関連するタイムライン投稿・画像も全て削除されます。`
       )
     )
       return;
@@ -133,6 +142,7 @@ export default function UserHotspotsModal({
             <div className="space-y-3">
               <div className="text-sm text-gray-500 mb-2">
                 {hotspots.length}件のホットスポット
+                （画像あり: {hotspots.filter((h) => h.hasImage).length}件）
               </div>
               {hotspots.map((hotspot) => {
                 const imageUrl = getImageUrl(hotspot);
@@ -153,8 +163,8 @@ export default function UserHotspotsModal({
                           }}
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-purple-600 text-white text-xs">
-                          画像
+                        <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-500 text-xs">
+                          画像なし
                         </div>
                       )}
                     </div>
@@ -165,14 +175,20 @@ export default function UserHotspotsModal({
                         <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
                           {getMuscleGroupLabel(hotspot.muscleGroup)}
                         </span>
-                        {hotspot.muscleName && (
-                          <span className="text-sm font-medium text-gray-900 truncate">
-                            {hotspot.muscleName}
+                        {hotspot.customMuscleNames &&
+                          hotspot.customMuscleNames.length > 0 && (
+                            <span className="text-sm font-medium text-gray-900 truncate">
+                              {hotspot.customMuscleNames.join(", ")}
+                            </span>
+                          )}
+                        {!hotspot.hasImage && (
+                          <span className="px-2 py-0.5 text-xs rounded-full bg-gray-200 text-gray-600">
+                            画像なし
                           </span>
                         )}
                       </div>
                       <div className="text-xs text-gray-500">
-                        更新日: {formatDate(hotspot.updatedAt)}
+                        更新日: {formatDate(hotspot.lastUpdated)}
                       </div>
                     </div>
 
