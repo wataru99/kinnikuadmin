@@ -5,6 +5,7 @@ import { collection, getDocs, query, orderBy, where, Timestamp, deleteDoc, doc, 
 import { db } from "@/lib/firebase";
 import Header from "@/components/Header";
 import ProtectedLayout from "@/components/ProtectedLayout";
+import UserHotspotsModal from "./UserHotspotsModal";
 
 type UserRole = "viewer" | "trainer" | "admin";
 type VerificationStatus = "unverified" | "pending" | "verified" | "rejected";
@@ -107,6 +108,7 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [showHotspotsModal, setShowHotspotsModal] = useState(false);
   const [editFormData, setEditFormData] = useState({
     displayName: "",
     role: "viewer" as UserRole,
@@ -257,6 +259,7 @@ export default function UsersPage() {
     setShowDetailModal(false);
     setSelectedUser(null);
     setIsEditing(false);
+    setShowHotspotsModal(false);
   };
 
   const handleUpdateUser = async () => {
@@ -776,6 +779,12 @@ export default function UsersPage() {
                         編集
                       </button>
                       <button
+                        onClick={() => setShowHotspotsModal(true)}
+                        className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
+                      >
+                        ホットスポット
+                      </button>
+                      <button
                         onClick={handleDeleteUser}
                         className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
                       >
@@ -787,6 +796,14 @@ export default function UsersPage() {
               </div>
             </div>
           </div>
+        )}
+        {/* ホットスポットモーダル */}
+        {showHotspotsModal && selectedUser && (
+          <UserHotspotsModal
+            userId={selectedUser.id}
+            userName={selectedUser.displayName}
+            onClose={() => setShowHotspotsModal(false)}
+          />
         )}
       </main>
     </div>

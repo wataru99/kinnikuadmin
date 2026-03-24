@@ -10,6 +10,7 @@ const menuItems = [
   { label: "本人確認", href: "/verification" },
   { label: "コミュニティ投稿", href: "/posts" },
   { label: "筋肉写真管理", href: "/photos" },
+  { label: "ホットスポット管理", href: "/hotspots" },
   { label: "サービス管理", href: "/services" },
   { label: "広告管理", href: "/ads" },
   { label: "ショップ管理", href: "/shop" },
