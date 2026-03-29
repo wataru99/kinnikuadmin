@@ -6,6 +6,7 @@ import {
   query,
   where,
   Timestamp,
+  setDoc,
 } from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
 import { db, storage } from "../firebase";
@@ -110,6 +111,10 @@ export async function deleteHotspotComplete(
   userId: string,
   trainingId: string
 ): Promise<void> {
+  // 0. 削除記録を作成（iOS側でUserDefaultsからの復活を防止）
+  const deletedRef = doc(db, "users", userId, "deleted_trainings", trainingId);
+  await setDoc(deletedRef, { deletedAt: Timestamp.now() });
+
   // 1. users/{userId}/trainings/{trainingId} を削除
   const trainingDocRef = doc(db, "users", userId, "trainings", trainingId);
   await deleteDoc(trainingDocRef);
@@ -223,6 +228,10 @@ export async function deleteLatestMuscleById(muscleId: string): Promise<void> {
   // users/{userId}/trainings/{trainingId} 削除
   if (userId && trainingId) {
     try {
+      // 削除記録を作成（iOS側でUserDefaultsからの復活を防止）
+      const deletedRef = doc(db, "users", userId, "deleted_trainings", trainingId);
+      await setDoc(deletedRef, { deletedAt: Timestamp.now() });
+
       await deleteDoc(doc(db, "users", userId, "trainings", trainingId));
     } catch (error) {
       console.error("training 削除エラー:", error);
