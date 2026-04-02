@@ -5,7 +5,6 @@ import { collection, getDocs, query, orderBy, limit, startAfter, Timestamp, Quer
 import { db } from "@/lib/firebase";
 import Header from "@/components/Header";
 import ProtectedLayout from "@/components/ProtectedLayout";
-import { adminDeleteLatestMuscle, adminDeleteHotspotImage } from "@/lib/services/adminDeleteService";
 
 interface MusclePhoto {
   id: string;
@@ -35,7 +34,6 @@ export default function PhotosPage() {
   const [muscleGroupFilter, setMuscleGroupFilter] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("date");
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPhotos();
@@ -129,36 +127,6 @@ export default function PhotosPage() {
   const handlePrevPage = () => {
     if (currentPage > 1) {
       fetchPhotos('prev');
-    }
-  };
-
-  const handleDeletePhoto = async (photoId: string) => {
-    if (!confirm("この投稿を完全に削除しますか？画像・コメントも全て削除されます。")) return;
-    setDeletingId(photoId);
-    try {
-      await adminDeleteLatestMuscle(photoId);
-      setPhotos(prev => prev.filter(p => p.id !== photoId));
-    } catch (error) {
-      console.error("削除エラー:", error);
-      alert("削除に失敗しました");
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
-  const handleDeleteImageOnly = async (photoId: string) => {
-    if (!confirm("画像のみ削除しますか？投稿自体は残ります。")) return;
-    setDeletingId(photoId);
-    try {
-      await adminDeleteHotspotImage(photoId);
-      setPhotos(prev => prev.map(p =>
-        p.id === photoId ? { ...p, imageURL: "" } : p
-      ));
-    } catch (error) {
-      console.error("画像削除エラー:", error);
-      alert("画像削除に失敗しました");
-    } finally {
-      setDeletingId(null);
     }
   };
 
@@ -334,21 +302,11 @@ export default function PhotosPage() {
                     </div>
 
                     <div className="flex space-x-1">
-                      {photo.imageURL && (
-                        <button
-                          onClick={() => handleDeleteImageOnly(photo.id)}
-                          disabled={deletingId === photo.id}
-                          className="flex-1 bg-orange-500 text-white px-2 py-1 rounded text-xs hover:bg-orange-600 disabled:opacity-50"
-                        >
-                          {deletingId === photo.id ? "..." : "画像削除"}
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDeletePhoto(photo.id)}
-                        disabled={deletingId === photo.id}
-                        className="flex-1 bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700 disabled:opacity-50"
-                      >
-                        {deletingId === photo.id ? "..." : "削除"}
+                      <button className="flex-1 bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700">
+                        詳細
+                      </button>
+                      <button className="flex-1 bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs hover:bg-gray-300">
+                        削除
                       </button>
                     </div>
                   </div>
